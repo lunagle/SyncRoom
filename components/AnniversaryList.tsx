@@ -35,7 +35,7 @@ export default function AnniversaryList({ items }: { items: Anniversary[] }) {
       </div>
 
       {/* カードグリッド */}
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-2 sm:grid-cols-2">
         {sorted.map((item, i) => (
           <AnniversaryCard key={item.id} item={item} index={i} />
         ))}
