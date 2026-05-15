@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation'
 const NAV_ITEMS = [
   { href: '/countdown', label: 'カウントダウン', icon: '⏳' },
   { href: '/memories', label: '時間記録', icon: '📅' },
-  { href: '/recurring', label: '繰り返し記念日', icon: '🔁' },
+  { href: '/todo', label: 'やること', icon: '✅' },
+  { href: '/recurring', label: '繰り返し', icon: '🔁' },
 ]
 
 export default function BottomNav() {

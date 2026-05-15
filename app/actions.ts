@@ -3,6 +3,27 @@
 import { createAdminClient } from '@/utils/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
+export async function addTodo(formData: FormData) {
+  const title = formData.get('title') as string
+  const category = (formData.get('category') as string) || 'general'
+  if (!title?.trim()) return
+  const supabase = createAdminClient()
+  await supabase.from('todos').insert({ title: title.trim(), category })
+  revalidatePath('/todo')
+}
+
+export async function toggleTodo(id: string, completed: boolean) {
+  const supabase = createAdminClient()
+  await supabase.from('todos').update({ completed }).eq('id', id)
+  revalidatePath('/todo')
+}
+
+export async function deleteTodo(id: string) {
+  const supabase = createAdminClient()
+  await supabase.from('todos').delete().eq('id', id)
+  revalidatePath('/todo')
+}
+
 export async function addAnniversary(formData: FormData) {
   const title = formData.get('title') as string
   const date = formData.get('date') as string
