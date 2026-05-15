@@ -7,30 +7,43 @@ export async function addAnniversary(formData: FormData) {
   const title = formData.get('title') as string
   const date = formData.get('date') as string
   const type = formData.get('type') as 'past' | 'future'
-  const recurring = formData.get('recurring') === 'true'
+  const recurring_period = (formData.get('recurring_period') as string) || 'none'
 
   if (!title?.trim() || !date || !type) return
 
   const supabase = createAdminClient()
-  await supabase.from('anniversaries').insert({ title: title.trim(), date, type, recurring })
+  await supabase.from('anniversaries').insert({
+    title: title.trim(), date, type, recurring_period, recurring: recurring_period !== 'none',
+  })
   revalidatePath('/')
+  revalidatePath('/countdown')
+  revalidatePath('/memories')
+  revalidatePath('/recurring')
 }
 
 export async function deleteAnniversary(id: string) {
   const supabase = createAdminClient()
   await supabase.from('anniversaries').delete().eq('id', id)
   revalidatePath('/')
+  revalidatePath('/countdown')
+  revalidatePath('/memories')
+  revalidatePath('/recurring')
 }
 
 export async function updateAnniversary(id: string, formData: FormData) {
   const title = formData.get('title') as string
   const date = formData.get('date') as string
   const type = formData.get('type') as 'past' | 'future'
-  const recurring = formData.get('recurring') === 'true'
+  const recurring_period = (formData.get('recurring_period') as string) || 'none'
 
   if (!title?.trim() || !date || !type) return
 
   const supabase = createAdminClient()
-  await supabase.from('anniversaries').update({ title: title.trim(), date, type, recurring }).eq('id', id)
+  await supabase.from('anniversaries').update({
+    title: title.trim(), date, type, recurring_period, recurring: recurring_period !== 'none',
+  }).eq('id', id)
   revalidatePath('/')
+  revalidatePath('/countdown')
+  revalidatePath('/memories')
+  revalidatePath('/recurring')
 }

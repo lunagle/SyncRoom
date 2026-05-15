@@ -3,15 +3,16 @@
 import { useState, useRef, useTransition } from 'react'
 import { addAnniversary } from '@/app/actions'
 
-export default function AddAnniversaryModal() {
+export default function AddAnniversaryModal({ defaultType = 'past' }: { defaultType?: 'past' | 'future' }) {
   const [open, setOpen] = useState(false)
-  const [type, setType] = useState<'past' | 'future'>('past')
+  const [type, setType] = useState<'past' | 'future'>(defaultType)
   const [recurring, setRecurring] = useState(false)
   const [isPending, startTransition] = useTransition()
   const formRef = useRef<HTMLFormElement>(null)
 
   function handleSubmit(formData: FormData) {
     formData.set('type', type)
+    formData.set('recurring_period', 'none')
     formData.set('recurring', String(recurring))
     startTransition(async () => {
       await addAnniversary(formData)

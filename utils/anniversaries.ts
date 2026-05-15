@@ -1,9 +1,12 @@
+export type RecurringPeriod = 'none' | 'yearly' | 'monthly'
+
 export type Anniversary = {
   id: string
   title: string
   date: string
   type: 'past' | 'future'
   recurring: boolean
+  recurring_period: RecurringPeriod
   created_at: string
 }
 
@@ -12,17 +15,26 @@ export type SortOrder = 'near' | 'far' | 'added'
 
 export const DISPLAY_MODES: DisplayMode[] = ['days', 'hours', 'breakdown']
 
-// 毎年繰り返しの場合、今年か来年の次の発生日を返す
 export function getEffectiveDate(item: Anniversary): string {
-  if (!item.recurring || item.type !== 'future') return item.date
+  if (item.recurring_period === 'none' && !item.recurring) return item.date
 
   const original = new Date(item.date)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  const period = item.recurring_period !== 'none' ? item.recurring_period : 'yearly'
+
+  if (period === 'monthly') {
+    const day = original.getDate()
+    const thisMonth = new Date(today.getFullYear(), today.getMonth(), day)
+    if (thisMonth >= today) return thisMonth.toISOString().split('T')[0]
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, day)
+    return nextMonth.toISOString().split('T')[0]
+  }
+
+  // yearly
   const thisYear = new Date(today.getFullYear(), original.getMonth(), original.getDate())
   if (thisYear >= today) return thisYear.toISOString().split('T')[0]
-
   const nextYear = new Date(today.getFullYear() + 1, original.getMonth(), original.getDate())
   return nextYear.toISOString().split('T')[0]
 }
@@ -73,19 +85,14 @@ export function calculateBreakdown(
     const prev = new Date(to.getFullYear(), to.getMonth(), 0)
     days += prev.getDate()
   }
-  if (months < 0) {
-    years--
-    months += 12
-  }
+  if (months < 0) { years--; months += 12 }
 
   return { years, months, days }
 }
 
 export function formatDate(date: string): string {
   return new Date(date).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+    year: 'numeric', month: 'long', day: 'numeric',
   })
 }
 
@@ -93,10 +100,12 @@ export function formatMonthDay(date: string): string {
   return new Date(date).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })
 }
 
+export function formatDay(date: string): string {
+  return `${new Date(date).getDate()}日`
+}
+
 export const MODE_LABELS: Record<DisplayMode, string> = {
-  days: '日',
-  hours: '時間',
-  breakdown: '年月日',
+  days: '日', hours: '時間', breakdown: '年月日',
 }
 
 export function getAutoMode(date: string, type: 'past' | 'future'): DisplayMode {
