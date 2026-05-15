@@ -15,6 +15,13 @@ export type SortOrder = 'near' | 'far' | 'added'
 
 export const DISPLAY_MODES: DisplayMode[] = ['days', 'hours', 'breakdown']
 
+function toLocalDate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 export function getEffectiveDate(item: Anniversary): string {
   if (item.recurring_period === 'none' && !item.recurring) return item.date
 
@@ -27,16 +34,16 @@ export function getEffectiveDate(item: Anniversary): string {
   if (period === 'monthly') {
     const day = original.getDate()
     const thisMonth = new Date(today.getFullYear(), today.getMonth(), day)
-    if (thisMonth >= today) return thisMonth.toISOString().split('T')[0]
+    if (thisMonth >= today) return toLocalDate(thisMonth)
     const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, day)
-    return nextMonth.toISOString().split('T')[0]
+    return toLocalDate(nextMonth)
   }
 
   // yearly
   const thisYear = new Date(today.getFullYear(), original.getMonth(), original.getDate())
-  if (thisYear >= today) return thisYear.toISOString().split('T')[0]
+  if (thisYear >= today) return toLocalDate(thisYear)
   const nextYear = new Date(today.getFullYear() + 1, original.getMonth(), original.getDate())
-  return nextYear.toISOString().split('T')[0]
+  return toLocalDate(nextYear)
 }
 
 function diffMs(date: string, type: 'past' | 'future'): number {
