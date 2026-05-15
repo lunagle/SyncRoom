@@ -7,12 +7,13 @@ export const revalidate = 3600
 
 export default async function CountdownPage() {
   const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('anniversaries')
-    .select('*')
-    .eq('type', 'future')
-    .eq('recurring_period', 'none')
-    .order('date', { ascending: true })
+
+  const [{ data: futures }, { data: recurring }] = await Promise.all([
+    supabase.from('anniversaries').select('*').eq('type', 'future').eq('recurring_period', 'none'),
+    supabase.from('anniversaries').select('*').neq('recurring_period', 'none'),
+  ])
+
+  const items = [...(futures ?? []), ...(recurring ?? [])] as Anniversary[]
 
   return (
     <main className="min-h-screen px-6 py-12 font-sans" style={{ color: '#f0f2ff' }}>
@@ -28,15 +29,8 @@ export default async function CountdownPage() {
           <p className="text-sm" style={{ color: '#6b7280' }}>〇〇までの日数</p>
         </div>
 
-        {error && (
-          <div className="mb-6 rounded-xl border px-4 py-3 text-sm"
-            style={{ background: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.2)', color: '#f87171' }}>
-            {error.message}
-          </div>
-        )}
-
-        {data && data.length > 0 ? (
-          <AnniversaryList items={data as Anniversary[]} />
+        {items.length > 0 ? (
+          <AnniversaryList items={items} />
         ) : (
           <div className="rounded-2xl border py-16 text-center text-sm"
             style={{ borderColor: 'rgba(255,255,255,0.07)', color: '#6b7280' }}>
