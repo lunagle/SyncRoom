@@ -54,7 +54,7 @@ export default function TodoList({ items }: { items: Todo[] }) {
   return (
     <div>
       {/* 入力欄 */}
-      <form action={handleAdd} className="mb-5">
+      <form onSubmit={(e) => { e.preventDefault(); handleAdd(new FormData(e.currentTarget)); e.currentTarget.reset() }} className="mb-5">
         {/* カテゴリ選択 */}
         <div className="flex gap-1.5 mb-2">
           {CATEGORIES.map((c) => (
