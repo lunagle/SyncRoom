@@ -28,6 +28,7 @@ export default function TodoList({ items }: { items: Todo[] }) {
   const [filter, setFilter] = useState<string>('all')
   const [category, setCategory] = useState('general')
   const [assignee, setAssignee] = useState('both')
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const filtered = filter === 'all'
@@ -43,7 +44,11 @@ export default function TodoList({ items }: { items: Todo[] }) {
   function handleAdd(formData: FormData) {
     formData.set('category', category)
     formData.set('assignee', assignee)
-    startTransition(async () => { await addTodo(formData) })
+    setErrorMsg(null)
+    startTransition(async () => {
+      const result = await addTodo(formData)
+      if (result?.error) setErrorMsg(result.error)
+    })
   }
 
   return (
@@ -78,6 +83,11 @@ export default function TodoList({ items }: { items: Todo[] }) {
             </button>
           ))}
         </div>
+        {errorMsg && (
+          <p className="mb-2 text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
+            エラー: {errorMsg}
+          </p>
+        )}
         <div className="flex gap-2">
           <input name="title" type="text" required placeholder="やること追加…"
             className="flex-1 rounded-xl px-4 py-3 text-sm outline-none"

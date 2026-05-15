@@ -7,11 +7,13 @@ export async function addTodo(formData: FormData) {
   const title = formData.get('title') as string
   const category = (formData.get('category') as string) || 'general'
   const assignee = (formData.get('assignee') as string) || 'both'
-  if (!title?.trim()) return
+  if (!title?.trim()) return { error: 'タイトルが空です' }
   const supabase = createAdminClient()
-  await supabase.from('todos').insert({ title: title.trim(), category, assignee })
+  const { error } = await supabase.from('todos').insert({ title: title.trim(), category, assignee })
+  if (error) return { error: error.message }
   revalidatePath('/')
   revalidatePath('/todo')
+  return { error: null }
 }
 
 export async function toggleTodo(id: string, completed: boolean) {
