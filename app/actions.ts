@@ -16,6 +16,24 @@ export async function addTodo(formData: FormData) {
   return { error: null }
 }
 
+export async function addEvent(formData: FormData) {
+  const title = formData.get('title') as string
+  const date = formData.get('date') as string
+  const note = formData.get('note') as string
+  if (!title?.trim() || !date) return { error: 'タイトルと日付が必要です' }
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('events').insert({ title: title.trim(), date, note: note?.trim() || null })
+  if (error) return { error: error.message }
+  revalidatePath('/calendar')
+  return { error: null }
+}
+
+export async function deleteEvent(id: string) {
+  const supabase = createAdminClient()
+  await supabase.from('events').delete().eq('id', id)
+  revalidatePath('/calendar')
+}
+
 export async function toggleTodo(id: string, completed: boolean) {
   const supabase = createAdminClient()
   await supabase.from('todos').update({ completed }).eq('id', id)
