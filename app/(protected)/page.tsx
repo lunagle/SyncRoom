@@ -2,7 +2,7 @@ import { createAdminClient } from '@/utils/supabase/admin'
 import Link from 'next/link'
 import TodoList from '@/components/TodoList'
 import { Anniversary, sortAnniversaries, getEffectiveDate, calculateDays } from '@/utils/anniversaries'
-import { Todo } from '@/app/todo/page'
+import { Todo } from '@/app/(protected)/todo/page'
 
 export const revalidate = 0
 
