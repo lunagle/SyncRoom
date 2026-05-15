@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { CalendarEvent, GoogleEvent } from '@/app/calendar/page'
 import { Anniversary, getEffectiveDate } from '@/utils/anniversaries'
-import { addEvent, deleteEvent } from '@/app/actions'
+import { deleteEvent } from '@/app/actions'
+import { createClient } from '@/utils/supabase/client'
 
 type DayMark = { type: 'event' | 'anniversary' | 'google'; title: string; id: string; color: string }
 
@@ -12,13 +13,31 @@ const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
 function toYMD(y: number, m: number, d: number) {
   return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
 }
-
 function todayYMD() {
   const t = new Date()
   return toYMD(t.getFullYear(), t.getMonth(), t.getDate())
 }
 
-export default function CalendarView({ events, anniversaries, googleEvents = [] }: { events: CalendarEvent[]; anniversaries: Anniversary[]; googleEvents?: GoogleEvent[] }) {
+async function addToGoogleCalendar(token: string, title: string, date: string, note?: string) {
+  const body = {
+    summary: title,
+    description: note || undefined,
+    start: { date },
+    end: { date },
+  }
+  const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  return res.ok
+}
+
+export default function CalendarView({ events, anniversaries, googleEvents = [] }: {
+  events: CalendarEvent[]
+  anniversaries: Anniversary[]
+  googleEvents?: GoogleEvent[]
+}) {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
@@ -27,10 +46,17 @@ export default function CalendarView({ events, anniversaries, googleEvents = [] 
   const [addDate, setAddDate] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [providerToken, setProviderToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setProviderToken(session?.provider_token ?? null)
+    })
+  }, [])
 
   const todayStr = todayYMD()
 
-  // 各日付にマークを付ける
   const marks: Record<string, DayMark[]> = {}
   events.forEach((e) => {
     if (!marks[e.date]) marks[e.date] = []
@@ -46,7 +72,6 @@ export default function CalendarView({ events, anniversaries, googleEvents = [] 
     marks[e.date].push({ type: 'google', title: e.title, id: e.id, color: '#34d399' })
   })
 
-  // カレンダーグリッド生成
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const cells: (number | null)[] = [
@@ -58,16 +83,33 @@ export default function CalendarView({ events, anniversaries, googleEvents = [] 
   const prevMonth = () => { if (month === 0) { setYear(y => y - 1); setMonth(11) } else setMonth(m => m - 1) }
   const nextMonth = () => { if (month === 11) { setYear(y => y + 1); setMonth(0) } else setMonth(m => m + 1) }
 
-  const selectedDate = selected
-  const selectedMarks = selectedDate ? (marks[selectedDate] ?? []) : []
-  const selectedEvents = events.filter((e) => e.date === selectedDate)
+  const selectedMarks = selected ? (marks[selected] ?? []) : []
 
-  function handleAdd(formData: FormData) {
+  async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
     setErrorMsg(null)
+    const form = e.currentTarget
+    const title = (form.elements.namedItem('title') as HTMLInputElement).value.trim()
+    const date = (form.elements.namedItem('date') as HTMLInputElement).value
+    const note = (form.elements.namedItem('note') as HTMLInputElement).value.trim()
+    if (!title || !date) return
+
     startTransition(async () => {
-      const result = await addEvent(formData)
-      if (result?.error) { setErrorMsg(result.error); return }
+      // Googleカレンダーに追加
+      if (providerToken) {
+        const ok = await addToGoogleCalendar(providerToken, title, date, note)
+        if (!ok) {
+          setErrorMsg('Googleカレンダーへの追加に失敗しました')
+          return
+        }
+      } else {
+        setErrorMsg('Googleにログインし直してください')
+        return
+      }
       setShowAdd(false)
+      form.reset()
+      // ページリロードでGoogleイベントを再取得
+      window.location.reload()
     })
   }
 
@@ -101,21 +143,15 @@ export default function CalendarView({ events, anniversaries, googleEvents = [] 
           const isToday = dateStr === todayStr
           const isSelected = dateStr === selected
           const dow = i % 7
-
           return (
-            <button
-              key={i}
-              onClick={() => setSelected(isSelected ? null : dateStr)}
+            <button key={i} onClick={() => setSelected(isSelected ? null : dateStr)}
               className="flex flex-col items-center py-1.5 rounded-xl transition-all"
               style={{
                 background: isSelected ? 'rgba(167,139,250,0.2)' : isToday ? 'rgba(255,255,255,0.06)' : 'transparent',
                 border: isSelected ? '1px solid rgba(167,139,250,0.5)' : '1px solid transparent',
-              }}
-            >
+              }}>
               <span className="text-sm font-medium leading-none mb-1"
-                style={{
-                  color: isSelected ? '#a78bfa' : isToday ? '#f0f2ff' : dow === 0 ? '#f87171' : dow === 6 ? '#60a5fa' : '#9ca3af',
-                }}>
+                style={{ color: isSelected ? '#a78bfa' : isToday ? '#f0f2ff' : dow === 0 ? '#f87171' : dow === 6 ? '#60a5fa' : '#9ca3af' }}>
                 {day}
               </span>
               <div className="flex gap-0.5 flex-wrap justify-center">
@@ -129,23 +165,19 @@ export default function CalendarView({ events, anniversaries, googleEvents = [] 
       </div>
 
       {/* 選択日の詳細 */}
-      {selectedDate && (
+      {selected && (
         <div className="mb-4 rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-semibold" style={{ color: '#f0f2ff' }}>
-              {year}年{month + 1}月{selectedDate.split('-')[2]}日
+              {year}年{month + 1}月{selected.split('-')[2]}日
             </span>
-            <button onClick={() => { setAddDate(selectedDate); setShowAdd(true) }}
+            <button onClick={() => { setAddDate(selected); setShowAdd(true) }}
               className="text-xs px-3 py-1 rounded-full"
-              style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)' }}>
-              + 追加
+              style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)' }}>
+              + Googleに追加
             </button>
           </div>
-
-          {selectedMarks.length === 0 && (
-            <p className="text-xs" style={{ color: '#374151' }}>予定なし</p>
-          )}
-
+          {selectedMarks.length === 0 && <p className="text-xs" style={{ color: '#374151' }}>予定なし</p>}
           <div className="flex flex-col gap-2">
             {selectedMarks.map((m, i) => (
               <div key={i} className="flex items-center justify-between gap-2">
@@ -160,9 +192,6 @@ export default function CalendarView({ events, anniversaries, googleEvents = [] 
                   <button onClick={() => startTransition(async () => { await deleteEvent(m.id) })}
                     className="text-xs shrink-0" style={{ color: '#374151' }}>✕</button>
                 )}
-                {m.type === 'google' && (
-                  <span className="text-xs shrink-0" style={{ color: '#34d399' }}>G</span>
-                )}
               </div>
             ))}
           </div>
@@ -170,11 +199,11 @@ export default function CalendarView({ events, anniversaries, googleEvents = [] 
       )}
 
       {/* 追加ボタン（日付未選択時） */}
-      {!selectedDate && (
+      {!selected && (
         <button onClick={() => { setAddDate(''); setShowAdd(true) }}
           className="w-full rounded-2xl py-3 text-sm font-semibold"
-          style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.2)' }}>
-          + 予定を追加
+          style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }}>
+          + Googleカレンダーに予定を追加
         </button>
       )}
 
@@ -186,11 +215,10 @@ export default function CalendarView({ events, anniversaries, googleEvents = [] 
           <div className="w-full max-w-md rounded-t-3xl p-6 sm:rounded-2xl"
             style={{ background: '#080c18', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-base font-semibold" style={{ color: '#f0f2ff' }}>予定を追加</h2>
+              <h2 className="text-base font-semibold" style={{ color: '#f0f2ff' }}>Googleカレンダーに追加</h2>
               <button onClick={() => setShowAdd(false)} style={{ color: '#6b7280' }}>✕</button>
             </div>
-            <form onSubmit={(e) => { e.preventDefault(); handleAdd(new FormData(e.currentTarget)) }}
-              className="flex flex-col gap-4">
+            <form onSubmit={handleAdd} className="flex flex-col gap-4">
               <input name="title" type="text" required placeholder="タイトル"
                 className="w-full rounded-xl px-4 py-3 text-sm outline-none"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#f0f2ff' }} />
@@ -200,11 +228,11 @@ export default function CalendarView({ events, anniversaries, googleEvents = [] 
               <input name="note" type="text" placeholder="メモ（任意）"
                 className="w-full rounded-xl px-4 py-3 text-sm outline-none"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#f0f2ff' }} />
-              {errorMsg && <p className="text-xs" style={{ color: '#f87171' }}>{errorMsg}</p>}
+              {errorMsg && <p className="text-xs px-1" style={{ color: '#f87171' }}>{errorMsg}</p>}
               <button type="submit" disabled={isPending}
                 className="w-full rounded-xl py-3 text-sm font-semibold transition-opacity disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', color: '#fff' }}>
-                {isPending ? '保存中...' : '保存する'}
+                style={{ background: 'linear-gradient(135deg, #34d399, #06b6d4)', color: '#fff' }}>
+                {isPending ? '追加中...' : 'Googleカレンダーに保存'}
               </button>
             </form>
           </div>
