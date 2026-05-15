@@ -28,10 +28,7 @@ type Props = { item: Anniversary; index?: number }
 function DisplayValue({ date, type, mode, isPast }: {
   date: string; type: 'past' | 'future'; mode: DisplayMode; isPast: boolean
 }) {
-  const gradient = isPast
-    ? 'linear-gradient(135deg, #8b5cf6, #a78bfa)'
-    : 'linear-gradient(135deg, #06b6d4, #a78bfa)'
-  const gs = { background: gradient, WebkitBackgroundClip: 'text' as const, WebkitTextFillColor: 'transparent' as const, backgroundClip: 'text' as const }
+  const accent = isPast ? '#c4b5fd' : '#67e8f9'
 
   if (mode === 'breakdown') {
     const { years, months, days } = calculateBreakdown(date, type)
@@ -39,10 +36,23 @@ function DisplayValue({ date, type, mode, isPast }: {
     const animMonths = useCountUp(months)
     const animDays = useCountUp(days)
     return (
-      <div className="flex items-end gap-4 flex-wrap">
-        {years > 0 && <span className="flex items-baseline gap-1"><span className="text-6xl font-black tabular-nums tracking-tight animate-count-up" style={gs}>{animYears}</span><span className="text-base" style={{ color: '#9ca3af' }}>年</span></span>}
-        {months > 0 && <span className="flex items-baseline gap-1"><span className="text-6xl font-black tabular-nums tracking-tight animate-count-up" style={gs}>{animMonths}</span><span className="text-base" style={{ color: '#9ca3af' }}>ヶ月</span></span>}
-        <span className="flex items-baseline gap-1"><span className="text-6xl font-black tabular-nums tracking-tight animate-count-up" style={gs}>{animDays}</span><span className="text-base" style={{ color: '#9ca3af' }}>日</span></span>
+      <div className="flex items-end gap-3 flex-wrap">
+        {years > 0 && (
+          <span className="flex items-baseline gap-0.5">
+            <span className="text-4xl font-bold tabular-nums tracking-tight animate-count-up" style={{ color: '#f0f2ff' }}>{animYears}</span>
+            <span className="text-xs ml-0.5" style={{ color: '#6b7280' }}>年</span>
+          </span>
+        )}
+        {months > 0 && (
+          <span className="flex items-baseline gap-0.5">
+            <span className="text-4xl font-bold tabular-nums tracking-tight animate-count-up" style={{ color: '#f0f2ff' }}>{animMonths}</span>
+            <span className="text-xs ml-0.5" style={{ color: '#6b7280' }}>ヶ月</span>
+          </span>
+        )}
+        <span className="flex items-baseline gap-0.5">
+          <span className="text-4xl font-bold tabular-nums tracking-tight animate-count-up" style={{ color: '#f0f2ff' }}>{animDays}</span>
+          <span className="text-xs ml-0.5" style={{ color: '#6b7280' }}>日</span>
+        </span>
       </div>
     )
   }
@@ -50,12 +60,13 @@ function DisplayValue({ date, type, mode, isPast }: {
   const raw = mode === 'days' ? calculateDays(date, type) : calculateHours(date, type)
   const animated = useCountUp(raw)
   return (
-    <div className="flex items-baseline gap-2">
-      {!isPast && <span className="text-lg font-light" style={{ color: '#9ca3af' }}>あと</span>}
-      <span className="text-7xl font-black tabular-nums tracking-tight animate-count-up" style={gs}>
+    <div className="flex items-baseline gap-1.5">
+      {!isPast && <span className="text-xs font-light" style={{ color: '#6b7280' }}>あと</span>}
+      <span className="text-5xl font-bold tabular-nums tracking-tight animate-count-up" style={{ color: '#f0f2ff' }}>
         {animated.toLocaleString()}
       </span>
-      <span className="text-lg font-light" style={{ color: '#9ca3af' }}>{mode === 'days' ? '日' : '時間'}</span>
+      <span className="text-sm font-light" style={{ color: accent }}>{mode === 'days' ? '日' : '時間'}</span>
+      {isPast && mode !== 'breakdown' && <span className="text-xs font-light" style={{ color: '#4b5563' }}>経過</span>}
     </div>
   )
 }
@@ -82,98 +93,85 @@ export default function AnniversaryCard({ item, index = 0 }: Props) {
     startTransition(async () => { await deleteAnniversary(item.id) })
   }
 
-  const glowClass = isPast ? 'card-glow-past' : 'card-glow-future'
-  const accentGradient = isPast
-    ? 'linear-gradient(90deg, #8b5cf6, #a78bfa)'
-    : 'linear-gradient(90deg, #06b6d4, #a78bfa)'
-  const cardBg = isPast
-    ? 'radial-gradient(ellipse at top left, rgba(139,92,246,0.06) 0%, rgba(8,12,24,0.9) 60%)'
-    : 'radial-gradient(ellipse at top left, rgba(6,182,212,0.06) 0%, rgba(8,12,24,0.9) 60%)'
+  const accent = isPast ? '#8b5cf6' : '#06b6d4'
+  const accentFaint = isPast ? 'rgba(139,92,246,0.1)' : 'rgba(6,182,212,0.08)'
+  const accentText = isPast ? '#c4b5fd' : '#67e8f9'
 
   return (
     <>
       <div
-        className={`relative overflow-hidden rounded-3xl border p-7 transition-all duration-300 ${glowClass} animate-fade-in-up`}
+        className={`relative overflow-hidden rounded-2xl p-4 transition-all duration-300 animate-fade-in-up ${isPast ? 'card-glow-past' : 'card-glow-future'}`}
         style={{
-          background: cardBg,
-          borderColor: isPast ? 'rgba(139,92,246,0.15)' : 'rgba(6,182,212,0.12)',
-          animationDelay: `${index * 80}ms`,
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          backdropFilter: 'blur(12px)',
+          animationDelay: `${index * 60}ms`,
         }}
       >
-        {/* グラデーションボーダー上部 */}
-        <div className="absolute left-0 top-0 w-full h-px" style={{ background: accentGradient }} />
+        {/* 左アクセントライン */}
+        <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full" style={{ background: accent }} />
 
-        {/* アクションボタン */}
-        <div className="absolute right-4 top-4 flex gap-1.5">
-          <button onClick={() => { setEditing(true); setConfirming(false) }}
-            className="rounded-lg px-2.5 py-1 text-xs transition-all"
-            style={{ color: '#6b7280', background: 'rgba(255,255,255,0.05)' }}>
-            編集
-          </button>
-          {confirming ? (
-            <div className="flex gap-1">
-              <button onClick={handleDelete} disabled={isPending} className="rounded-lg px-2.5 py-1 text-xs"
-                style={{ background: 'rgba(239,68,68,0.2)', color: '#f87171' }}>削除する</button>
-              <button onClick={() => setConfirming(false)} className="rounded-lg px-2.5 py-1 text-xs"
-                style={{ color: '#6b7280', background: 'rgba(255,255,255,0.05)' }}>戻る</button>
-            </div>
-          ) : (
-            <button onClick={() => setConfirming(true)} className="rounded-lg px-2.5 py-1 text-xs"
-              style={{ color: '#6b7280', background: 'rgba(255,255,255,0.05)' }}>削除</button>
-          )}
-        </div>
-
-        <div className="pt-1">
-          {/* バッジ */}
-          <div className="mb-4 flex gap-2 flex-wrap">
-            <span className="inline-block rounded-full px-3 py-0.5 text-xs font-medium"
-              style={{
-                background: isPast ? 'rgba(139,92,246,0.12)' : 'rgba(6,182,212,0.1)',
-                color: isPast ? '#a78bfa' : '#22d3ee',
-              }}>
-              {isPast ? '経過記録' : 'カウントダウン'}
-            </span>
-            {item.recurring && (
-              <span className="inline-block rounded-full px-3 py-0.5 text-xs font-medium"
-                style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24' }}>
-                🔁 毎年
+        {/* ヘッダー行 */}
+        <div className="flex items-start justify-between mb-2 pl-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="text-xs font-medium" style={{ color: accentText }}>
+                {isPast ? '経過' : 'カウントダウン'}
               </span>
+              {item.recurring && (
+                <span className="text-xs" style={{ color: '#6b7280' }}>· 毎年</span>
+              )}
+            </div>
+            <h3 className="text-sm font-semibold truncate" style={{ color: '#f0f2ff' }}>{item.title}</h3>
+          </div>
+          <div className="flex gap-1 ml-2 shrink-0">
+            <button onClick={() => { setEditing(true); setConfirming(false) }}
+              className="text-xs px-2 py-0.5 rounded-md transition-all"
+              style={{ color: '#4b5563', background: 'rgba(255,255,255,0.04)' }}>
+              編集
+            </button>
+            {confirming ? (
+              <>
+                <button onClick={handleDelete} disabled={isPending}
+                  className="text-xs px-2 py-0.5 rounded-md"
+                  style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171' }}>削除</button>
+                <button onClick={() => setConfirming(false)}
+                  className="text-xs px-2 py-0.5 rounded-md"
+                  style={{ color: '#4b5563', background: 'rgba(255,255,255,0.04)' }}>✕</button>
+              </>
+            ) : (
+              <button onClick={() => setConfirming(true)}
+                className="text-xs px-2 py-0.5 rounded-md"
+                style={{ color: '#4b5563', background: 'rgba(255,255,255,0.04)' }}>削除</button>
             )}
           </div>
+        </div>
 
-          {/* タイトル */}
-          <h3 className="mb-1 text-lg font-bold" style={{ color: '#f0f2ff' }}>{item.title}</h3>
-          <p className="mb-6 text-sm" style={{ color: '#6b7280' }}>
-            {item.recurring
-              ? `毎年 ${formatMonthDay(item.date)}（次回: ${formatDate(effectiveDate)}）`
-              : formatDate(item.date)}
-          </p>
+        {/* 日付 */}
+        <p className="pl-3 mb-3 text-xs" style={{ color: '#4b5563' }}>
+          {item.recurring
+            ? `次回: ${formatDate(effectiveDate)}`
+            : formatDate(item.date)}
+        </p>
 
-          {/* メイン数値 */}
+        {/* メイン数値 */}
+        <div className="pl-3 mb-3">
           <DisplayValue date={effectiveDate} type={item.type} mode={mode} isPast={isPast} />
+        </div>
 
-          {isPast && mode !== 'breakdown' && (
-            <p className="mt-1.5 text-sm" style={{ color: '#4b5563' }}>から経過</p>
-          )}
-
-          {/* 単位切替 */}
-          <div className="mt-6 flex gap-2">
-            {DISPLAY_MODES.map((m) => (
-              <button key={m} onClick={() => setMode(m)}
-                className="rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200"
-                style={{
-                  background: mode === m
-                    ? isPast ? 'rgba(139,92,246,0.2)' : 'rgba(6,182,212,0.15)'
-                    : 'rgba(255,255,255,0.04)',
-                  color: mode === m ? (isPast ? '#a78bfa' : '#22d3ee') : '#4b5563',
-                  border: `1px solid ${mode === m
-                    ? isPast ? 'rgba(139,92,246,0.35)' : 'rgba(6,182,212,0.3)'
-                    : 'rgba(255,255,255,0.06)'}`,
-                }}>
-                {MODE_LABELS[m]}
-              </button>
-            ))}
-          </div>
+        {/* 単位切替 */}
+        <div className="pl-3 flex gap-1.5">
+          {DISPLAY_MODES.map((m) => (
+            <button key={m} onClick={() => setMode(m)}
+              className="rounded-full px-2.5 py-0.5 text-xs font-medium transition-all duration-200"
+              style={{
+                background: mode === m ? accentFaint : 'transparent',
+                color: mode === m ? accentText : '#374151',
+                border: `1px solid ${mode === m ? accent : 'rgba(255,255,255,0.06)'}`,
+              }}>
+              {MODE_LABELS[m]}
+            </button>
+          ))}
         </div>
       </div>
 
