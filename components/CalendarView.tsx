@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { CalendarEvent } from '@/app/calendar/page'
+import { CalendarEvent, GoogleEvent } from '@/app/calendar/page'
 import { Anniversary, getEffectiveDate } from '@/utils/anniversaries'
 import { addEvent, deleteEvent } from '@/app/actions'
 
-type DayMark = { type: 'event' | 'anniversary'; title: string; id: string; color: string }
+type DayMark = { type: 'event' | 'anniversary' | 'google'; title: string; id: string; color: string }
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -18,7 +18,7 @@ function todayYMD() {
   return toYMD(t.getFullYear(), t.getMonth(), t.getDate())
 }
 
-export default function CalendarView({ events, anniversaries }: { events: CalendarEvent[]; anniversaries: Anniversary[] }) {
+export default function CalendarView({ events, anniversaries, googleEvents = [] }: { events: CalendarEvent[]; anniversaries: Anniversary[]; googleEvents?: GoogleEvent[] }) {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
@@ -40,6 +40,10 @@ export default function CalendarView({ events, anniversaries }: { events: Calend
     const d = getEffectiveDate(a)
     if (!marks[d]) marks[d] = []
     marks[d].push({ type: 'anniversary', title: a.title, id: a.id, color: a.type === 'future' ? '#67e8f9' : '#f9a8d4' })
+  })
+  googleEvents.forEach((e) => {
+    if (!marks[e.date]) marks[e.date] = []
+    marks[e.date].push({ type: 'google', title: e.title, id: e.id, color: '#34d399' })
   })
 
   // カレンダーグリッド生成
@@ -149,12 +153,15 @@ export default function CalendarView({ events, anniversaries }: { events: Calend
                   <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: m.color }} />
                   <span className="text-sm truncate" style={{ color: '#e5e7eb' }}>{m.title}</span>
                   <span className="text-xs shrink-0" style={{ color: '#4b5563' }}>
-                    {m.type === 'anniversary' ? '記念日' : '予定'}
+                    {m.type === 'anniversary' ? '記念日' : m.type === 'google' ? 'Google' : '予定'}
                   </span>
                 </div>
                 {m.type === 'event' && (
                   <button onClick={() => startTransition(async () => { await deleteEvent(m.id) })}
                     className="text-xs shrink-0" style={{ color: '#374151' }}>✕</button>
+                )}
+                {m.type === 'google' && (
+                  <span className="text-xs shrink-0" style={{ color: '#34d399' }}>G</span>
                 )}
               </div>
             ))}
