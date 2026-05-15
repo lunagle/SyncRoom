@@ -32,7 +32,7 @@ export default async function Home() {
             SyncRoom
           </h1>
           <p className="text-sm" style={{ color: '#6b7280' }}>
-            ふたりの記念日とカウントダウン
+            ふたりの今と奇跡を繋ぐ、デジタルルーム
           </p>
         </div>
 
