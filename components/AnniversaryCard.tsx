@@ -8,7 +8,7 @@ import {
 } from '@/utils/anniversaries'
 import { deleteAnniversary, updateAnniversary } from '@/app/actions'
 
-function useCountUp(target: number, duration = 900): number {
+function useCountUp(target: number, duration = 800): number {
   const [value, setValue] = useState(0)
   useEffect(() => {
     const start = Date.now()
@@ -28,7 +28,8 @@ type Props = { item: Anniversary; index?: number }
 function DisplayValue({ date, type, mode, isPast }: {
   date: string; type: 'past' | 'future'; mode: DisplayMode; isPast: boolean
 }) {
-  const accent = isPast ? '#c4b5fd' : '#67e8f9'
+  const color = '#f0f2ff'
+  const unit = { color: '#6b7280', fontSize: '11px' }
 
   if (mode === 'breakdown') {
     const { years, months, days } = calculateBreakdown(date, type)
@@ -36,23 +37,10 @@ function DisplayValue({ date, type, mode, isPast }: {
     const animMonths = useCountUp(months)
     const animDays = useCountUp(days)
     return (
-      <div className="flex items-end gap-3 flex-wrap">
-        {years > 0 && (
-          <span className="flex items-baseline gap-0.5">
-            <span className="text-3xl font-bold tabular-nums tracking-tight animate-count-up" style={{ color: '#f0f2ff' }}>{animYears}</span>
-            <span className="text-xs ml-0.5" style={{ color: '#6b7280' }}>年</span>
-          </span>
-        )}
-        {months > 0 && (
-          <span className="flex items-baseline gap-0.5">
-            <span className="text-3xl font-bold tabular-nums tracking-tight animate-count-up" style={{ color: '#f0f2ff' }}>{animMonths}</span>
-            <span className="text-xs ml-0.5" style={{ color: '#6b7280' }}>ヶ月</span>
-          </span>
-        )}
-        <span className="flex items-baseline gap-0.5">
-          <span className="text-3xl font-bold tabular-nums tracking-tight animate-count-up" style={{ color: '#f0f2ff' }}>{animDays}</span>
-          <span className="text-xs ml-0.5" style={{ color: '#6b7280' }}>日</span>
-        </span>
+      <div className="flex items-baseline gap-2 animate-count-up">
+        {years > 0 && <><span className="text-2xl font-bold tabular-nums" style={{ color }}>{animYears}</span><span style={unit}>年</span></>}
+        {months > 0 && <><span className="text-2xl font-bold tabular-nums" style={{ color }}>{animMonths}</span><span style={unit}>ヶ月</span></>}
+        <span className="text-2xl font-bold tabular-nums" style={{ color }}>{animDays}</span><span style={unit}>日</span>
       </div>
     )
   }
@@ -60,13 +48,10 @@ function DisplayValue({ date, type, mode, isPast }: {
   const raw = mode === 'days' ? calculateDays(date, type) : calculateHours(date, type)
   const animated = useCountUp(raw)
   return (
-    <div className="flex items-baseline gap-1.5">
-      {!isPast && <span className="text-xs font-light" style={{ color: '#6b7280' }}>あと</span>}
-      <span className="text-4xl font-bold tabular-nums tracking-tight animate-count-up" style={{ color: '#f0f2ff' }}>
-        {animated.toLocaleString()}
-      </span>
-      <span className="text-sm font-light" style={{ color: accent }}>{mode === 'days' ? '日' : '時間'}</span>
-      {isPast && mode !== 'breakdown' && <span className="text-xs font-light" style={{ color: '#4b5563' }}>経過</span>}
+    <div className="flex items-baseline gap-1 animate-count-up">
+      {!isPast && <span style={{ color: '#6b7280', fontSize: '11px' }}>あと</span>}
+      <span className="text-2xl font-bold tabular-nums" style={{ color }}>{animated.toLocaleString()}</span>
+      <span style={unit}>{mode === 'days' ? '日' : '時間'}{isPast ? '経過' : ''}</span>
     </div>
   )
 }
@@ -94,71 +79,65 @@ export default function AnniversaryCard({ item, index = 0 }: Props) {
   }
 
   const accent = isPast ? '#8b5cf6' : '#06b6d4'
-  const accentFaint = isPast ? 'rgba(139,92,246,0.1)' : 'rgba(6,182,212,0.08)'
+  const accentFaint = isPast ? 'rgba(139,92,246,0.12)' : 'rgba(6,182,212,0.1)'
   const accentText = isPast ? '#c4b5fd' : '#67e8f9'
+  const dateStr = item.recurring ? `次回: ${formatDate(effectiveDate)}` : formatDate(item.date)
 
   return (
     <>
       <div
-        className={`relative overflow-hidden rounded-2xl p-3 transition-all duration-300 animate-fade-in-up ${isPast ? 'card-glow-past' : 'card-glow-future'}`}
+        className={`relative rounded-xl px-3 py-2.5 transition-all duration-300 animate-fade-in-up ${isPast ? 'card-glow-past' : 'card-glow-future'}`}
         style={{
           background: 'rgba(255,255,255,0.03)',
           border: '1px solid rgba(255,255,255,0.07)',
-          backdropFilter: 'blur(12px)',
-          animationDelay: `${index * 60}ms`,
+          borderLeft: `2px solid ${accent}`,
+          animationDelay: `${index * 50}ms`,
         }}
       >
-        {/* 左アクセントライン */}
-        <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full" style={{ background: accent }} />
-
-        {/* タイトル行 */}
-        <div className="flex items-center justify-between mb-1.5 pl-3">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            <h3 className="text-sm font-semibold truncate" style={{ color: '#f0f2ff' }}>{item.title}</h3>
-            {item.recurring && <span className="text-xs shrink-0" style={{ color: '#6b7280' }}>毎年</span>}
+        {/* 行1: タイトル(左) + 数値(右) */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-sm font-semibold truncate" style={{ color: '#e5e7eb' }}>{item.title}</h3>
+              {item.recurring && <span className="text-xs shrink-0" style={{ color: '#4b5563' }}>毎年</span>}
+            </div>
           </div>
-          <div className="flex gap-1 ml-2 shrink-0">
+          <div className="shrink-0">
+            <DisplayValue date={effectiveDate} type={item.type} mode={mode} isPast={isPast} />
+          </div>
+        </div>
+
+        {/* 行2: 日付 + 単位切替 + アクション */}
+        <div className="flex items-center justify-between mt-1.5">
+          <span className="text-xs" style={{ color: '#374151' }}>{dateStr}</span>
+          <div className="flex items-center gap-1.5">
+            {DISPLAY_MODES.map((m) => (
+              <button key={m} onClick={() => setMode(m)}
+                className="text-xs px-1.5 py-0.5 rounded-full transition-all"
+                style={{
+                  background: mode === m ? accentFaint : 'transparent',
+                  color: mode === m ? accentText : '#374151',
+                  border: `1px solid ${mode === m ? accent : 'rgba(255,255,255,0.05)'}`,
+                  fontSize: '10px',
+                }}>
+                {MODE_LABELS[m]}
+              </button>
+            ))}
+            <span style={{ color: '#1f2937', fontSize: '10px' }}>|</span>
             <button onClick={() => { setEditing(true); setConfirming(false) }}
-              className="text-xs px-1.5 py-0.5 rounded"
-              style={{ color: '#374151' }}>編集</button>
+              style={{ color: '#374151', fontSize: '10px' }}>編集</button>
             {confirming ? (
               <>
                 <button onClick={handleDelete} disabled={isPending}
-                  className="text-xs px-1.5 py-0.5 rounded"
-                  style={{ color: '#f87171' }}>削除</button>
+                  style={{ color: '#f87171', fontSize: '10px' }}>削除</button>
                 <button onClick={() => setConfirming(false)}
-                  className="text-xs px-1.5 py-0.5 rounded"
-                  style={{ color: '#374151' }}>✕</button>
+                  style={{ color: '#374151', fontSize: '10px' }}>✕</button>
               </>
             ) : (
               <button onClick={() => setConfirming(true)}
-                className="text-xs px-1.5 py-0.5 rounded"
-                style={{ color: '#374151' }}>削除</button>
+                style={{ color: '#374151', fontSize: '10px' }}>削除</button>
             )}
           </div>
-        </div>
-
-        {/* メイン数値 + 日付 */}
-        <div className="pl-3 mb-2">
-          <DisplayValue date={effectiveDate} type={item.type} mode={mode} isPast={isPast} />
-          <p className="mt-0.5 text-xs" style={{ color: '#374151' }}>
-            {item.recurring ? `次回: ${formatDate(effectiveDate)}` : formatDate(item.date)}
-          </p>
-        </div>
-
-        {/* 単位切替 */}
-        <div className="pl-3 flex gap-1">
-          {DISPLAY_MODES.map((m) => (
-            <button key={m} onClick={() => setMode(m)}
-              className="rounded-full px-2 py-0.5 text-xs transition-all duration-200"
-              style={{
-                background: mode === m ? accentFaint : 'transparent',
-                color: mode === m ? accentText : '#374151',
-                border: `1px solid ${mode === m ? accent : 'rgba(255,255,255,0.05)'}`,
-              }}>
-              {MODE_LABELS[m]}
-            </button>
-          ))}
         </div>
       </div>
 
