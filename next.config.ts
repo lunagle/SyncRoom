@@ -1,7 +1,5 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr'],
-};
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

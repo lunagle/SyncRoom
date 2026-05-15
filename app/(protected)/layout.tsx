@@ -1,12 +1,14 @@
-import { createClient } from '@/utils/supabase/server'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const cookieStore = await cookies()
+  const hasSession = cookieStore.getAll().some(
+    (c) => c.name.startsWith('sb-') && c.name.includes('auth-token')
+  )
 
-  if (!user) redirect('/login')
+  if (!hasSession) redirect('/login')
 
   return (
     <>
