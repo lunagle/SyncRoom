@@ -6,9 +6,11 @@ import { revalidatePath } from 'next/cache'
 export async function addTodo(formData: FormData) {
   const title = formData.get('title') as string
   const category = (formData.get('category') as string) || 'general'
+  const assignee = (formData.get('assignee') as string) || 'both'
   if (!title?.trim()) return
   const supabase = createAdminClient()
-  await supabase.from('todos').insert({ title: title.trim(), category })
+  await supabase.from('todos').insert({ title: title.trim(), category, assignee })
+  revalidatePath('/')
   revalidatePath('/todo')
 }
 

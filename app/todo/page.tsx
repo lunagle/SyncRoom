@@ -8,6 +8,7 @@ export type Todo = {
   title: string
   completed: boolean
   category: string
+  assignee: string
   created_at: string
 }
 
