@@ -4,10 +4,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
+  { href: '/', label: 'ホーム', icon: '🏠' },
   { href: '/countdown', label: 'カウントダウン', icon: '⏳' },
-  { href: '/memories', label: '時間記録', icon: '📅' },
-  { href: '/todo', label: 'やること', icon: '✅' },
-  { href: '/recurring', label: '繰り返し', icon: '🔁' },
+  { href: '/more', label: 'その他', icon: '☰' },
 ]
 
 export default function BottomNav() {
