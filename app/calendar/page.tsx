@@ -2,6 +2,7 @@ import { createAdminClient } from '@/utils/supabase/admin'
 import { createClient } from '@/utils/supabase/server'
 import CalendarView from '@/components/CalendarView'
 import { Anniversary } from '@/utils/anniversaries'
+import { requireAuth } from '@/utils/auth'
 
 export const revalidate = 0
 
@@ -50,6 +51,7 @@ async function fetchGoogleCalendarEvents(accessToken: string): Promise<GoogleEve
 }
 
 export default async function CalendarPage() {
+  await requireAuth()
   const supabase = await createClient()
   const { data: { session } } = await supabase.auth.getSession()
 

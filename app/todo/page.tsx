@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/utils/supabase/admin'
 import TodoList from '@/components/TodoList'
+import { requireAuth } from '@/utils/auth'
 
 export const revalidate = 0
 
@@ -13,6 +14,7 @@ export type Todo = {
 }
 
 export default async function TodoPage() {
+  await requireAuth()
   const supabase = createAdminClient()
   const { data } = await supabase
     .from('todos')

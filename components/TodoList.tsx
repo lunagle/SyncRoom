@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { addTodo, toggleTodo, deleteTodo } from '@/app/actions'
-import { Todo } from '@/app/(protected)/todo/page'
+import { Todo } from '@/app/todo/page'
 
 const CATEGORIES = [
   { value: 'general', label: 'その他', color: '#a78bfa' },

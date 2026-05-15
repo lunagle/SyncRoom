@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
-import { CalendarEvent, GoogleEvent } from '@/app/(protected)/calendar/page'
+import { CalendarEvent, GoogleEvent } from '@/app/calendar/page'
 import { Anniversary, getEffectiveDate } from '@/utils/anniversaries'
 import { deleteEvent } from '@/app/actions'
 import { createClient } from '@/utils/supabase/client'

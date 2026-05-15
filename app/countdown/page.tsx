@@ -1,10 +1,12 @@
 import { createAdminClient } from '@/utils/supabase/admin'
 import CountdownTabs from '@/components/CountdownTabs'
 import { Anniversary } from '@/utils/anniversaries'
+import { requireAuth } from '@/utils/auth'
 
 export const revalidate = 3600
 
 export default async function CountdownPage() {
+  await requireAuth()
   const supabase = createAdminClient()
 
   const [{ data: futures }, { data: recurring }, { data: past }] = await Promise.all([

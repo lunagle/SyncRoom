@@ -2,11 +2,13 @@ import { createAdminClient } from '@/utils/supabase/admin'
 import Link from 'next/link'
 import TodoList from '@/components/TodoList'
 import { Anniversary, sortAnniversaries, getEffectiveDate, calculateDays } from '@/utils/anniversaries'
-import { Todo } from '@/app/(protected)/todo/page'
+import { Todo } from '@/app/todo/page'
+import { requireAuth } from '@/utils/auth'
 
 export const revalidate = 0
 
 export default async function HomePage() {
+  await requireAuth()
   const supabase = createAdminClient()
 
   const [{ data: anniversaries }, { data: recurring }, { data: todos }] = await Promise.all([

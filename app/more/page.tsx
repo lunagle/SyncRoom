@@ -1,4 +1,7 @@
-export default function MorePage() {
+import { requireAuth } from '@/utils/auth'
+
+export default async function MorePage() {
+  await requireAuth()
   const items = [
     { label: 'プロフィール', icon: '👤', desc: '二人のプロフィール', soon: true },
     { label: 'したいことリスト', icon: '🌟', desc: '行きたい場所・やりたいこと', soon: true },
