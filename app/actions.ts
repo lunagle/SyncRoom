@@ -7,11 +7,12 @@ export async function addAnniversary(formData: FormData) {
   const title = formData.get('title') as string
   const date = formData.get('date') as string
   const type = formData.get('type') as 'past' | 'future'
+  const recurring = formData.get('recurring') === 'true'
 
   if (!title?.trim() || !date || !type) return
 
   const supabase = createAdminClient()
-  await supabase.from('anniversaries').insert({ title: title.trim(), date, type })
+  await supabase.from('anniversaries').insert({ title: title.trim(), date, type, recurring })
   revalidatePath('/')
 }
 
@@ -25,10 +26,11 @@ export async function updateAnniversary(id: string, formData: FormData) {
   const title = formData.get('title') as string
   const date = formData.get('date') as string
   const type = formData.get('type') as 'past' | 'future'
+  const recurring = formData.get('recurring') === 'true'
 
   if (!title?.trim() || !date || !type) return
 
   const supabase = createAdminClient()
-  await supabase.from('anniversaries').update({ title: title.trim(), date, type }).eq('id', id)
+  await supabase.from('anniversaries').update({ title: title.trim(), date, type, recurring }).eq('id', id)
   revalidatePath('/')
 }

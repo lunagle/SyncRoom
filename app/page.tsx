@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/utils/supabase/admin'
-import AnniversaryCard from '@/components/AnniversaryCard'
 import AddAnniversaryModal from '@/components/AddAnniversaryModal'
+import AnniversaryList from '@/components/AnniversaryList'
 import { Anniversary } from '@/utils/anniversaries'
 
 export const revalidate = 3600
@@ -10,7 +10,7 @@ export default async function Home() {
   const { data: anniversaries, error } = await supabase
     .from('anniversaries')
     .select('*')
-    .order('date', { ascending: true })
+    .order('created_at', { ascending: true })
 
   return (
     <main
@@ -18,7 +18,6 @@ export default async function Home() {
       style={{ background: '#050810', color: '#f0f2ff' }}
     >
       <div className="mx-auto max-w-2xl">
-        {/* ヘッダー */}
         <div className="mb-12 text-center">
           <h1
             className="mb-2 text-3xl font-bold tracking-tight"
@@ -36,7 +35,6 @@ export default async function Home() {
           </p>
         </div>
 
-        {/* エラー */}
         {error && (
           <div
             className="mb-6 rounded-xl border px-4 py-3 text-sm"
@@ -50,20 +48,12 @@ export default async function Home() {
           </div>
         )}
 
-        {/* カードグリッド */}
         {anniversaries && anniversaries.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {(anniversaries as Anniversary[]).map((item) => (
-              <AnniversaryCard key={item.id} item={item} />
-            ))}
-          </div>
+          <AnniversaryList items={anniversaries as Anniversary[]} />
         ) : (
           <div
             className="rounded-2xl border py-16 text-center text-sm"
-            style={{
-              borderColor: 'rgba(255,255,255,0.07)',
-              color: '#6b7280',
-            }}
+            style={{ borderColor: 'rgba(255,255,255,0.07)', color: '#6b7280' }}
           >
             記念日がまだありません
           </div>
