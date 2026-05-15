@@ -15,8 +15,8 @@ export default async function MemoriesPage() {
     .order('date', { ascending: true })
 
   return (
-    <main className="min-h-screen px-6 py-12 font-sans" style={{ color: '#f0f2ff' }}>
-      <div className="mx-auto max-w-2xl">
+    <main className="min-h-screen px-3 py-8 font-sans" style={{ color: '#f0f2ff' }}>
+      <div className="mx-auto max-w-4xl">
         <div className="mb-10 text-center">
           <h1 className="mb-1 text-2xl font-bold tracking-tight"
             style={{
