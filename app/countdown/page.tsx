@@ -16,8 +16,8 @@ export default async function CountdownPage() {
   const items = [...(futures ?? []), ...(recurring ?? [])] as Anniversary[]
 
   return (
-    <main className="min-h-screen px-3 py-8 font-sans" style={{ color: '#f0f2ff' }}>
-      <div className="mx-auto max-w-4xl">
+    <main className="min-h-screen px-2 py-6 font-sans" style={{ color: '#f0f2ff' }}>
+      <div className="mx-auto max-w-3xl">
         <div className="mb-10 text-center">
           <h1 className="mb-1 text-2xl font-bold tracking-tight"
             style={{
